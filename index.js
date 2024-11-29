@@ -28,15 +28,26 @@ const shuffle = (jsonData) => {
 
 // Home route (renders index page with randomized "ipsum")
 app.get('/', (req, res) => {
-    const jsonData = JSON.parse(fs.readFileSync('data.json', 'utf8'));
-    let sentences = [];
+    // Use query param or default to 1
+    const numParagraphs = parseInt(req.query.numberOfParagraphs) || 1;
 
-    // Generate the requested number of paragraphs
-    for (let i = 0; i < req.query.numberOfParagraphs; i++) {
-        sentences.push(shuffle(jsonData.ipsum).slice(0, 5).join(', '));
-    }
+    fs.readFile('data.json', 'utf8', (err, data) => {
+        if (err) {
+            console.error("Error reading the JSON file:", err);
+            return res.status(500).send("Server error: Unable to load data.");
+        }
 
-    res.render('index', { data: sentences, query: req.query });
+        const jsonData = JSON.parse(data);
+        let sentences = [];
+
+        // Generate the requested number of paragraphs
+        for (let i = 0; i < numParagraphs; i++) {
+            sentences.push(shuffle(jsonData.ipsum).slice(0, 5).join(', '));
+        }
+
+        // Render the EJS template with the data and query values
+        res.render('index', { data: sentences, query: req.query });
+    });
 });
 
 // Start the server on port 3000
